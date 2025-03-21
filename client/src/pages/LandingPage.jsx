@@ -9,7 +9,7 @@ const LandingPage = () => {
           LINKS
         </div>
         {NavLinks.map((link, index) => (
-          <button onClick={() => window.location = link.path} className="hover:scale-125 font-bold bg-primary text-white px-4 py-2 rounded-full whitespace-nowrap w-min self-center">
+          <button key={link.path + index + link.path} onClick={() => window.location = link.path} className="hover:scale-125 font-bold bg-primary text-white px-4 py-2 rounded-full whitespace-nowrap w-min self-center">
             {link.title}
           </button>
         ))}

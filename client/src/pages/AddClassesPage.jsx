@@ -48,6 +48,7 @@ const hasConflict = (selectedClasses, newClass) => {
 const AddClassesPage = () => {
   const [selectedClasses, setSelectedClasses] = useState([]);
   const [hoveredClass, setHoveredClass] = useState(null);
+  const [filterField, setFilterField] = useState("");
 
   const handleAddClass = (course) => {
     if (!hasConflict(selectedClasses, course)) {
@@ -59,13 +60,27 @@ const AddClassesPage = () => {
     setSelectedClasses(selectedClasses.filter((c) => c.section !== course.section));
   };
 
+  const filteredCourses = mockCourses
+    .slice()
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .filter(course =>
+      filterField === "" || course.name.toLowerCase().includes(filterField.toLowerCase())
+    );
+
   return (
     <div className="flex flex-col p-4 gap-4">
       <div className="flex w-full gap-4 flex-row justify-center">
         <div className="w-1/3 border-r p-4 overflow-y-auto">
           <h2 className="text-lg font-bold mb-2 text-white">Available Classes</h2>
-          <div className="overflow-y-auto max-h-[80vh]">
-            {mockCourses.map((course) => (
+          <input
+            type="text"
+            placeholder="Search by class name"
+            value={filterField}
+            onChange={(e) => setFilterField(e.target.value)}
+            className="mb-2 p-2 w-full border rounded"
+          />
+          <div className="overflow-y-auto min-h-[650px] max-h-[650px]">
+            {filteredCourses.map((course) => (
               <div
                 key={course.section + course.name}
                 className={`p-2 border rounded cursor-pointer my-1 ${hasConflict(selectedClasses, course) ? "bg-red-300" : "bg-green-300"}`}
@@ -80,7 +95,7 @@ const AddClassesPage = () => {
         </div>
         <div className="w-1/2 p-4">
           <h2 className="text-lg font-bold mb-2 text-white">Your Schedule</h2>
-          <div className="grid grid-cols-6 border p-4 min-h-[700px] bg-white relative rounded-xl overflow-hidden">
+          <div className="grid grid-cols-6 border p-4 min-h-[700px] max-h-[700px] bg-white relative rounded-xl overflow-hidden">
             <div className="border-r w-full">
               {TIME_SLOTS.map((slot) => (
                 <div key={slot} className="border-b border-gray-400 p-0 text-sm h-[50px] flex items-end">{slot}</div>
@@ -121,7 +136,7 @@ const AddClassesPage = () => {
           </div>
         </div>
       </div>
-      <div className="w-full p-8">
+      <div className="w-1/2 p-8 self-center">
         <h2 className="text-lg font-bold text-white pb-4">Selected Classes</h2>
         <ul className="border p-4 bg-gray-100 rounded-xl">
           {selectedClasses.map((course) => (

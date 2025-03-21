@@ -1,107 +1,64 @@
+import mockCourses from "./mock_courses";
 
-import { readFileSync } from 'fs';
+export function formSchedule(mandatory, preferred) {
+  if (mandatory.length === 0 && preferred.length === 0) {
+    return [];
+  }
 
-let obj = JSON.parse(readFileSync('mock_courses.json', 'utf8'));
-
-function formSchedule(mandatory, preferred) {
-    let mandatoryConflict = false
-
-    // check whether any of the mandatory courses have any conflicts
-    for (let i = 0; i < mandatory.length - 1; i++) {
-        for (let j = i + 1; j < mandatory.length; j++) {
-            if (isConflict(mandatory[i], mandatory[j])) {
-                console.log("CONFLICT with the following courses:")
-                console.log(mandatory[i].name)
-                console.log("AND")
-                console.log(mandatory[j].name)
-                console.log("Schedule not possible")
-                return []
-            }
-        }
+  for (let i = 0; i < mandatory.length - 1; i++) {
+    for (let j = i + 1; j < mandatory.length; j++) {
+      if (isConflict(mandatory[i], mandatory[j])) {
+        return [];
+      }
     }
+  }
 
-    // list of possible schedules
-    let schedules = []
+  if (mandatory.length === 0) {
+    return preferred.map((course) => [course]);
+  }
 
-    for (let i = 0; i < preferred.length; i++) {
-        // check each preferred against mandatory first
-        let preferredConflict = false
-        for (let course of mandatory) {
-            if (isConflict(preferred[i], course)) {
-                console.log("Conflict with the following courses:")
-                console.log(mandatory[i].name + " (mandatory)")
-                console.log("AND")
-                console.log(preferred[i].name + " (preferred)")
-                preferredConflict = true
-                break
-            }
-        }
-        if (preferredConflict) continue     // skip to next preferred
+  let schedules = [mandatory];
 
-        // check our already made schedules to see whether we can add the new preferred course
-        // NOTE: super inefficient lol
-        for (let schedule of schedules) {
-            let conflict = false
-            for (let course of schedule) {
-                if (isConflict(course, preferred[i])) {
-                    conflict = true
-                    break
-                }
-            }
-            if (!conflict) {
-                schedule.push(preferred[i])
-            }
-        }
-
-        // make a new small schedule with just the mandatory + one preferred course
-        let newSchedule = mandatory
-        newSchedule.push(preferred[i])
-        schedules.push(newSchedule)
+  for (let i = 0; i < preferred.length; i++) {
+    let preferredConflict = false;
+    for (let course of mandatory) {
+      if (isConflict(preferred[i], course)) {
+        preferredConflict = true;
+        break;
+      }
     }
+    if (preferredConflict) continue;
 
-    return schedules
+    let newSchedule = [...mandatory, preferred[i]];
+    schedules.push(newSchedule);
+  }
+
+  return schedules;
 }
 
 function isConflict(course1, course2) {
-    // structure of [ "MWF", 480, 600]
-    let course1Time = parseTimeInterval(course1)
-    let course2Time = parseTimeInterval(course2)
+  let [days1, start1, end1] = parseTimeInterval(course1);
+  let [days2, start2, end2] = parseTimeInterval(course2);
 
-    if (course1Time[0] != course2Time[0]) {
-        return false
-    }
+  let hasCommonDay = days1.some(day => days2.includes(day));
+  if (!hasCommonDay) return false;
 
-    // course 2 begins in between course 1 times OR ends in between course 1 times
-    if ((course2Time[1] > course1Time[1] && course2Time[1] < course1Time[2]) ||
-        (course2Time[2] > course1Time[1] && course2Time[2] < course1Time[2])) {
-        return true
-    } else if (course1Time[1] === course2Time[1] && course1Time[2] === course2Time[2]) {
-        // course share time slot
-        return true
-    }
-
-    return false
+  return (start2 >= start1 && start2 < end1) ||
+    (end2 > start1 && end2 <= end1) ||
+    (start1 >= start2 && start1 < end2);
 }
 
 function parseTimeInterval(course) {
-    let courseTime = course.time.split(" ")
-    let courseInterval = courseTime[1].split("-")
+  let days = course.time.match(/[A-Za-z]+/g)[0].split("");
+  let timeRange = course.time.match(/\d{1,2}:\d{2}-\d{1,2}:\d{2}/g)[0].split("-");
 
-    let res = [courseTime[0]]
+  let startTime = convertToMinutes(timeRange[0]);
+  let endTime = convertToMinutes(timeRange[1]);
 
-    for (let time of courseInterval) {
-        let timeSplit = time.split(":")
-        let hr = parseFloat(timeSplit[0])
-        let min = parseFloat(timeSplit[1])
-        res.push(hr * 60 + min)
-    }
-
-    return res
+  return [days, startTime, endTime];
 }
 
-// TESTING
-let mandatory = [obj[0], obj[1], obj[2]];
-let preferred = [obj[3], obj[4]];
-
-let schedules = formSchedule(mandatory, preferred);
-console.log(schedules)
+function convertToMinutes(timeStr) {
+  let [hr, min] = timeStr.split(":").map(Number);
+  return hr * 60 + min;
+}
