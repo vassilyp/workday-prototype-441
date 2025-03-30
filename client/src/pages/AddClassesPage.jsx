@@ -49,10 +49,13 @@ const AddClassesPage = () => {
   const [selectedClasses, setSelectedClasses] = useState([]);
   const [hoveredClass, setHoveredClass] = useState(null);
   const [filterField, setFilterField] = useState("");
+  const [calendarOpen, setCalendarOpen] = useState(false);
 
   const handleAddClass = (course) => {
     if (!hasConflict(selectedClasses, course)) {
       setSelectedClasses([...selectedClasses, course]);
+    } else {
+      alert("This class doesn't fit.")
     }
   };
 
@@ -83,8 +86,11 @@ const AddClassesPage = () => {
             {filteredCourses.map((course) => (
               <div
                 key={course.section + course.name}
-                className={`p-2 border rounded cursor-pointer my-1 ${hasConflict(selectedClasses, course) ? "bg-red-300" : "bg-green-300"}`}
-                onClick={() => handleAddClass(course)}
+                className={`p-2 border rounded cursor-pointer my-1 bg-slate-100`}
+                onClick={() => {
+                  handleAddClass(course)
+                  setCalendarOpen(false)
+                }}
                 onMouseEnter={() => setHoveredClass(course)}
                 onMouseLeave={() => setHoveredClass(null)}
               >
@@ -94,6 +100,27 @@ const AddClassesPage = () => {
           </div>
         </div>
         <div className="w-1/2 p-4">
+          <h2 className="text-lg font-bold text-white pb-4">Selected Classes</h2>
+          <ul className="border p-4 bg-gray-100 rounded-xl">
+            {selectedClasses.map((course) => (
+              <li key={course.name} className="p-2 bg-blue-300 my-1 rounded flex justify-between">
+                {course.name} ({course.section}) - {course.time}
+                <button
+                  className="text-red-500 font-bold"
+                  onClick={() => {
+                    handleRemoveClass(course)
+                    setCalendarOpen(false)
+                  }}
+                >
+                  ✕
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+      {calendarOpen ? (
+        <div className="w-1/2 p-8 self-center">
           <h2 className="text-lg font-bold mb-2 text-white">Your Schedule</h2>
           <div className="grid grid-cols-6 border p-4 min-h-[700px] max-h-[700px] bg-white relative rounded-xl overflow-hidden">
             <div className="border-r w-full">
@@ -122,12 +149,6 @@ const AddClassesPage = () => {
                       }}
                     >
                       {course.name} ({course.section})<br /> {start} - {end}
-                      <button
-                        className="ml-2 text-red-500 font-bold"
-                        onClick={() => handleRemoveClass(course)}
-                      >
-                        ✕
-                      </button>
                     </div>
                   );
                 })}
@@ -135,23 +156,13 @@ const AddClassesPage = () => {
             ))}
           </div>
         </div>
-      </div>
-      <div className="w-1/2 p-8 self-center">
-        <h2 className="text-lg font-bold text-white pb-4">Selected Classes</h2>
-        <ul className="border p-4 bg-gray-100 rounded-xl">
-          {selectedClasses.map((course) => (
-            <li key={course.name} className="p-2 bg-blue-300 my-1 rounded flex justify-between">
-              {course.name} ({course.section}) - {course.time}
-              <button
-                className="text-red-500 font-bold"
-                onClick={() => handleRemoveClass(course)}
-              >
-                ✕
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
+      ) : (
+        <div className="w-full flex flex-col justify-center items-center p-8 self-center">
+          <button onClick={() => setCalendarOpen(true)} className="bg-white hover:bg-white/80 rounded-lg px-8 py-4">
+            View Schedule
+          </button>
+        </div>
+      )}
     </div>
   );
 };
