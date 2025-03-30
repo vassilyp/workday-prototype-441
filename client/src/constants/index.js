@@ -4,11 +4,11 @@ export const NavLinks = [
     path: '/'
   },
   {
-    title: 'Add Classes',
+    title: 'Workday',
     path: '/manual'
   },
   {
-    title: 'Schedule Builder',
+    title: 'WorkBetter',
     path: '/automated'
   }
 ]
